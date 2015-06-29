@@ -2394,9 +2394,6 @@ cdef class MixedIntegerLinearProgram(SageObject):
 
         INPUT:
 
-        - ``x`` -- (default: ``"x"``) a vector of decision variables or a
-          string giving the base name
-
         - ``form`` -- (default: ``"standard"``) a string specifying return type: either
           ``None``, or ``"std"`` or ``standard``, respectively returns an instance of
           InteractiveLPProblem or an instance of InteractiveLPProblemStandardForm
@@ -2406,6 +2403,8 @@ cdef class MixedIntegerLinearProgram(SageObject):
         A 2-tuple consists of an instance of class InteractiveLPProblem or InteractiveLPProblemStandardForm
         that is constructed based on a given MixedIntegerLinearProgram, and a list of basic
         variables (the basis) if standard form is chosen (by default), otherwise a None.
+
+        All variables must have 0 as lower bound and no upper bound.
 
         EXAMPLE::
 

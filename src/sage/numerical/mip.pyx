@@ -2434,6 +2434,13 @@ cdef class MixedIntegerLinearProgram(SageObject):
             sage: d = lp.dictionary(*basis)
             sage: view(d) #not tested
         """
+        back_end = self.get_backend()
+        for i in range(self.number_of_variables()):
+            if back_end.variable_lower_bound(i) != 0:
+                raise ValueError('Problem variables must have 0 as lower bound')
+            if back_end.variable_upper_bound(i) is not None:
+                raise ValueError('Problem variables must not have upper bound') 
+
         # Construct 'A'
         coef_matrix = []
         for constraint in self.constraints():
@@ -2451,7 +2458,6 @@ cdef class MixedIntegerLinearProgram(SageObject):
                 raise ValueError('Problem variables cannot have lower bounds')
 
         # Construct 'c'
-        back_end = self.get_backend()
         def get_obj_coef(i):
             return back_end.objective_coefficient(i)
         objective_coefs_vector = [get_obj_coef(i) for i in range(self.number_of_variables())]
@@ -2482,13 +2488,17 @@ cdef class MixedIntegerLinearProgram(SageObject):
             lp = InteractiveLPProblemStandardForm(A, b, c, x, slack_variables=w)
             basic_variables = []
             for i, e in enumerate(lp.x()):
-              import sage.numerical.backends.glpk_backend as glpk_backend 
-              # glp_bs: status that means "basic variable"
-              if back_end.get_col_stat(i) == glpk_backend.glp_bs:
-                basic_variables.append(str(e))
+                import sage.numerical.backends.glpk_backend as glpk_backend 
+                # glp_bs: status that means "basic variable"
+                if back_end.get_col_stat(i) == glpk_backend.glp_bs:
+                    basic_variables.append(str(e))
+                elif back_end.get_col_stat(i) != glpk_backend.glp_nl:
+                    raise ValueError('Non-basic variables must be on lower bound')
             for i, e in enumerate(lp.slack_variables()):
-              if back_end.get_row_stat(i) == glpk_backend.glp_bs:
-                basic_variables.append(str(e))
+                if back_end.get_row_stat(i) == glpk_backend.glp_bs:
+                    basic_variables.append(str(e))
+                elif back_end.get_col_stat(i) != glpk_backend.glp_nl:
+                    raise ValueError('Non-basic variables must be on lower bound')
             return lp, basic_variables
         else:
             raise ValueError('Form of construct_interactiveLPProblem() is either \'None\' or \'standard\'')

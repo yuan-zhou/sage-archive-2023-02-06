@@ -2432,6 +2432,20 @@ cdef class MixedIntegerLinearProgram(SageObject):
             sage: view(lp) #not tested
             sage: d = lp.dictionary(*basis)
             sage: view(d) #not tested
+
+        TESTS::
+            sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
+            sage: b.solver_parameter(backend.glp_simplex_or_intopt, backend.glp_simplex_only)
+            sage: b.solve()
+            0
+            sage: lp2, basis2 = p.construct_interactive_lp()
+            sage: basis2
+            ['m_1', 'n_0', 'x_3']
+            sage: d2 = lp2.dictionary(*basis2)
+            sage: d2.is_optimal()
+            True
+            sage: view(d2) #not tested
         """
         back_end = self.get_backend()
         for i in range(self.number_of_variables()):

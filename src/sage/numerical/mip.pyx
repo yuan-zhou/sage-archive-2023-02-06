@@ -2492,12 +2492,12 @@ cdef class MixedIntegerLinearProgram(SageObject):
                 if back_end.get_col_stat(i) == glpk_backend.glp_bs:
                     basic_variables.append(str(e))
                 elif back_end.get_col_stat(i) != glpk_backend.glp_nl:
-                    raise ValueError('Non-basic variables must be on lower bound')
+                    raise ValueError('Invaild col status')
             for i, e in enumerate(lp.slack_variables()):
-                if back_end.get_row_stat(i) == glpk_backend.glp_bs:
+                if back_end.get_row_stat(i) == glpk_backend.glp_bs: 
                     basic_variables.append(str(e))
-                elif back_end.get_col_stat(i) != glpk_backend.glp_nl:
-                    raise ValueError('Non-basic variables must be on lower bound')
+                elif back_end.get_row_stat(i) != glpk_backend.glp_nu:
+                    raise ValueError('Invaild row status')
             return lp, basic_variables
         else:
             raise ValueError('Form of construct_interactiveLPProblem() is either \'None\' or \'standard\'')

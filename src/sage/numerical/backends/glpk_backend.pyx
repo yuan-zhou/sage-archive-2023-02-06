@@ -927,6 +927,9 @@ cdef class GLPKBackend(GenericBackend):
         else:
           return glp_get_col_prim(self.lp, variable+1)
 
+    cpdef get_slack_value(self, int variable):
+        return glp_get_row_prim(self.lp, variable+1)
+
     cpdef int ncols(self):
         """
         Return the number of columns/variables.

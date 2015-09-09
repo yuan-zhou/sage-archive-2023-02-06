@@ -237,6 +237,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
+            # TODO: Implement
+
         """
         if self._leaving is None:
             raise ValueError("leaving variable must be chosen to compute "
@@ -437,6 +439,7 @@ class LPBackendDictionary(LPAbstractDictionary):
         if leaving is None:
             raise ValueError("leaving variable must be set before updating")
 
+        # TODO: implement
 
 p = MixedIntegerLinearProgram(maximization=True)
 x = p.new_variable(integer=True, nonnegative=True)

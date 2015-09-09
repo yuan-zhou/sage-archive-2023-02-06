@@ -1,15 +1,6 @@
-# from sage.modules.all import random_vector, vector
 import sage.numerical.backends.glpk_backend as backend
 from sage.numerical.interactive_simplex_method import *
 from sage.numerical.backends.glpk_backend import *
-# from sage.symbolic.all import SR
-
-
-def format(name, prefix, index):
-    if name:
-        return name.replace('[', '_').strip(']')
-    else:
-        return prefix + '_' + str(index)
 
 
 class LPBackendDictionary(LPAbstractDictionary):
@@ -57,6 +48,12 @@ class LPBackendDictionary(LPAbstractDictionary):
         sage: TestSuite(d).run()
 
         """
+        def format(name, prefix, index):
+            if name:
+                return name.replace('[', '_').strip(']')
+            else:
+                return prefix + '_' + str(index)
+
         super(LPBackendDictionary, self).__init__()
         self._backend = backend
         col_vars = tuple(
@@ -475,4 +472,3 @@ print 'nonbasic vars:', lpd.nonbasic_variables()
 print 'constant terms:', lpd.constant_terms()
 print 'obj coefs:', lpd.objective_coefficients()
 print 'obj values:', lpd.objective_value()
-

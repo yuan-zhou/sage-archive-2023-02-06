@@ -208,16 +208,27 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: A = ([1, 1], [3, 1])
-            sage: b = (1000, 1500)
-            sage: c = (10, 5)
-            sage: P = InteractiveLPProblemStandardForm(A, b, c)
-            sage: D = P.initial_dictionary()
-            sage: D.enter(1)
-            sage: D.entering_coefficients()
-            (1, 3)
+            sage: p = MixedIntegerLinearProgram(maximization=True)
+            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p.add_constraint(-x[0] + x[1] <= 2)
+            sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
+            sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
+            sage: b = p.get_backend()
+            sage: b.solver_parameter(
+                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
+            sage: b.solve()
+            sage: d = LPBackendDictionary(b)
+            sage: vars = d.nonbasic_variables()
+            sage: vars
+            sage: d.enter(vars[0])
+            sage: d.entering_coefficients()
+            sage: d.enter(vars[1])
+            sage: d.entering_coefficients()
+            sage: d.enter(vars[2])
+            sage: d.entering_coefficients()
 
         """
+        # TODO: implement
         if self._entering is None:
             raise ValueError("entering variable must be chosen to compute "
                              "its coefficients")
@@ -234,9 +245,27 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            # TODO: Implement
+            sage: p = MixedIntegerLinearProgram(maximization=True)
+            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p.add_constraint(-x[0] + x[1] <= 2)
+            sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
+            sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
+            sage: b = p.get_backend()
+            sage: b.solver_parameter(
+                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
+            sage: b.solve()
+            sage: d = LPBackendDictionary(b)
+            sage: vars = d.nonbasic_variables()
+            sage: vars
+            sage: d.enter(vars[0])
+            sage: d.entering_coefficients()
+            sage: d.enter(vars[1])
+            sage: d.entering_coefficients()
+            sage: d.enter(vars[2])
+            sage: d.entering_coefficients()
 
         """
+        # TODO: implement
         if self._leaving is None:
             raise ValueError("leaving variable must be chosen to compute "
                              "its coefficients")

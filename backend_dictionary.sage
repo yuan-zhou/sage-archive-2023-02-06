@@ -196,7 +196,7 @@ class LPBackendDictionary(LPAbstractDictionary):
             for i in range(self._backend.nrows())
             if self._backend.get_row_stat(i) == glp_bs
         )
-        return col_const + row_const
+        return vector(col_const + row_const)
 
     def entering_coefficients(self):
         r"""
@@ -220,20 +220,21 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: d = LPBackendDictionary(b)
             sage: vars = d.nonbasic_variables()
             sage: vars
+            (w_0, w_1)
             sage: d.enter(vars[0])
             sage: d.entering_coefficients()
+            (-0.2, 0.8)
             sage: d.enter(vars[1])
             sage: d.entering_coefficients()
-            sage: d.enter(vars[2])
-            sage: d.entering_coefficients()
+            (0.1, 0.1)
 
         """
-        # TODO: implement
         if self._entering is None:
             raise ValueError("entering variable must be chosen to compute "
                              "its coefficients")
-        k = tuple(self.nonbasic_variables()).index(self._entering)
-        return k
+        index = tuple(self.nonbasic_variables()).index(self._entering)
+        col = self._backend.eval_tab_col(index)
+        return vector([x for (y, x) in sorted(zip(col[0], col[1]))])
 
     def leaving_coefficients(self):
         r"""
@@ -255,22 +256,23 @@ class LPBackendDictionary(LPAbstractDictionary):
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             sage: d = LPBackendDictionary(b)
-            sage: vars = d.nonbasic_variables()
+            sage: vars = d.basic_variables()
             sage: vars
-            sage: d.enter(vars[0])
-            sage: d.entering_coefficients()
-            sage: d.enter(vars[1])
-            sage: d.entering_coefficients()
-            sage: d.enter(vars[2])
-            sage: d.entering_coefficients()
+            (x_0, x_1)
+            sage: d.leave(vars[0])
+            sage: d.leaving_coefficients()
+            (-0.2, 0.1)
+            sage: d.leave(vars[1])
+            sage: d.leaving_coefficients()
+            (0.8, 0.1)
 
         """
-        # TODO: implement
         if self._leaving is None:
             raise ValueError("leaving variable must be chosen to compute "
                              "its coefficients")
-        k = tuple(self.nonbasic_variables()).index(self._leaving)
-        return k
+        index = tuple(self.basic_variables()).index(self._leaving)
+        row = self._backend.eval_tab_row(index + self._backend.ncols())
+        return vector([x for (y, x) in sorted(zip(row[0], row[1]))])
 
     def nonbasic_variables(self):
         r"""

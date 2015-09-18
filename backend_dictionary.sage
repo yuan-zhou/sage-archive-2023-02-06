@@ -45,6 +45,19 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: b = p.get_backend()
             sage: d = LPBackendDictionary(b)
             sage: TestSuite(d).run()
+
+        An exception will be raised if the problem is not in standard form
+        i.e. with <= constraints and >= 0 variable bounds:
+
+            sage: p = MixedIntegerLinearProgram(maximization=True)
+            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p.add_constraint(8 * x[0] + 2 * x[1] >= 17)
+            sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
+            sage: b = p.get_backend()
+            sage: d = LPBackendDictionary(b)
+            Traceback (most recent call last):
+            ...
+            ValueError: Problem constraints not in standard form.
         """
         def format(name, prefix, index):
             if name:
@@ -54,6 +67,20 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         super(LPBackendDictionary, self).__init__()
         self._backend = backend
+
+        for i in range(self._backend.nrows()):
+            if self._backend.row_bounds(i)[0] != None \
+               or self._backend.row_bounds(i)[1] == None \
+               or self._backend.row_bounds(i)[1] <= 0:
+                raise AttributeError("Problem constraints "
+                                     "not in standard form.")
+
+        for i in range(self._backend.ncols()):
+            if self._backend.variable_lower_bound(i) == None \
+               or self._backend.variable_lower_bound(i) != 0:
+                raise AttributeError("Problem variables "
+                                     "not in standard form.")
+
         col_vars = tuple(
             format(self._backend.col_name(i), 'x', i)
             for i in range(self._backend.ncols())
@@ -187,7 +214,7 @@ class LPBackendDictionary(LPAbstractDictionary):
             if self._backend.get_col_stat(i) == glp_bs
         )
         row_const = tuple(
-            self._backend.row_bounds(i)[1] - self._backend.get_slack_value(i)
+            self._backend.row_bounds(i)[1] - self._backend.get_row_prim(i)
             for i in range(self._backend.nrows())
             if self._backend.get_row_stat(i) == glp_bs
         )
@@ -461,11 +488,11 @@ class LPBackendDictionary(LPAbstractDictionary):
         return self._backend
 
     def update(self):
-        # TODO: test test cases with online tools
         r"""
         Update ``self`` using previously set entering and leaving variables.
 
         EXAMPLES::
+
             sage: p = MixedIntegerLinearProgram()
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
@@ -478,7 +505,12 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: b.solve()
             sage: d = LPBackendDictionary(b)
             sage: d.objective_value()
+            1331.0
+            sage: d.nonbasic_variables()
+            (x_0, x_1, w_0, w_2)
             sage: d.enter(d.nonbasic_variables()[0])
+            sage: d.basic_variables()
+            (x_2, x_3, w_1)
             sage: d.leave(d.basic_variables()[0])
             sage: d.objective_value()
             1331.0
@@ -506,7 +538,7 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: d.update()
             Traceback (most recent call last):
             ...
-            ValueError: incompatible choice of entering and leaving variables \
+            ValueError: incompatible choice of entering and leaving variables
         """
         entering = self._entering
         if entering is None:

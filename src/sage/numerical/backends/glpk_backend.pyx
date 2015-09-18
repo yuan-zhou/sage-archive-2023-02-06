@@ -1092,17 +1092,13 @@ cdef class GLPKBackend(GenericBackend):
         else:
           return glp_get_col_prim(self.lp, variable+1)
 
-    cpdef get_slack_value(self, int variable):
+    cpdef get_row_prim(self, int variable):
         r"""
         Returns the value of a constraint given by the solver.
 
         .. NOTE::
 
            Behaviour is undefined unless ``solve`` has been called before.
-           
-           Slack variables associated with rows are all assumed to have -1
-           coefficients, so for a <= constraint the slack variable will be at 
-           upper bound if the constraint is tight.
 
         EXAMPLE::
 
@@ -1120,11 +1116,11 @@ cdef class GLPKBackend(GenericBackend):
             0
             sage: lp.get_objective_value()
             280.0
-            sage: lp.get_slack_value(0)
+            sage: lp.get_row_prim(0)
             24.0
-            sage: lp.get_slack_value(1)
+            sage: lp.get_row_prim(1)
             20.0
-            sage: lp.get_slack_value(2)
+            sage: lp.get_row_prim(2)
             8.0
         """
         return glp_get_row_prim(self.lp, variable+1)

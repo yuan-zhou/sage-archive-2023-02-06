@@ -44,7 +44,7 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
             sage: d = LPBackendDictionary(b)
-            sage: TestSuite(d).run()
+            sage: TestSuite(d).run(skip=['_test_pickling'])
 
         An exception will be raised if the problem is not in standard form
         i.e. with <= constraints and >= 0 variable bounds::

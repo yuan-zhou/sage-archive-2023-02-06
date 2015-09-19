@@ -47,17 +47,17 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: TestSuite(d).run()
 
         An exception will be raised if the problem is not in standard form
-        i.e. with <= constraints and >= 0 variable bounds:
+        i.e. with <= constraints and >= 0 variable bounds::
 
             sage: p = MixedIntegerLinearProgram(maximization=True)
             sage: x = p.new_variable(integer=True, nonnegative=True)
-            sage: p.add_constraint(8 * x[0] + 2 * x[1] >= 17)
+            sage: p.add_constraint(8 * x[0] + 2 * x[1], min=17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
             sage: d = LPBackendDictionary(b)
             Traceback (most recent call last):
             ...
-            ValueError: Problem constraints not in standard form.
+            AttributeError: Problem constraints not in standard form.
         """
         def format(name, prefix, index):
             if name:
@@ -70,14 +70,12 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         for i in range(self._backend.nrows()):
             if self._backend.row_bounds(i)[0] != None \
-               or self._backend.row_bounds(i)[1] == None \
-               or self._backend.row_bounds(i)[1] <= 0:
+               or self._backend.row_bounds(i)[1] == None:
                 raise AttributeError("Problem constraints "
                                      "not in standard form.")
 
         for i in range(self._backend.ncols()):
-            if self._backend.variable_lower_bound(i) == None \
-               or self._backend.variable_lower_bound(i) != 0:
+            if self._backend.variable_lower_bound(i) == None:
                 raise AttributeError("Problem variables "
                                      "not in standard form.")
 
@@ -128,7 +126,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Test when two problems have the same constrct:
 
-            sage: d3 = copy(d)
+            sage: d3 = LPBackendDictionary(copy(p).get_backend())
             sage: d3 == d
             False
         """
@@ -153,9 +151,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
 
         Use function in :class:`LPBackendDictionary`:
 
@@ -201,9 +200,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
             sage: d = LPBackendDictionary(b)
             sage: d.constant_terms()
             (1.3, 3.3)
@@ -237,9 +237,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
             sage: d = LPBackendDictionary(b)
             sage: vars = d.nonbasic_variables()
             sage: vars
@@ -299,9 +300,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
             sage: d = LPBackendDictionary(b)
             sage: vars = d.basic_variables()
             sage: vars
@@ -354,9 +356,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
 
         Use function in :class:`LPBackendDictionary`:
 
@@ -404,9 +407,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
 
         Use function in :class:`LPBackendDictionary`:
 
@@ -421,8 +425,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
             sage: d.objective_coefficients()
             (-0.58, -0.76)
-            sage: lpd.objective_coefficients()
-            (-0.5800000000000001, -0.76) # TODO: tolerrence
+            sage: lpd.objective_coefficients() # rel tol 1e-9
+            (-0.5800000000000001, -0.76)
         """
         col_coefs = tuple(
             self._backend.get_col_dual(i)
@@ -452,9 +456,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
             sage: d = LPBackendDictionary(b)
             sage: d.objective_value()
             14.08
@@ -477,13 +482,13 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
             sage: d = LPBackendDictionary(b)
             sage: d.get_backend()
-            <sage.numerical.backends.glpk_backend.GLPKBackend object at \
-            0x11a108e30>
+            <sage.numerical.backends.glpk_backend.GLPKBackend object at ...>
         """
         return self._backend
 
@@ -500,9 +505,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
             sage: d = LPBackendDictionary(b)
             sage: d.objective_value()
             1331.0
@@ -515,6 +521,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: d.objective_value()
             1331.0
             sage: d.update()
+            sage: d.basic_variables()
+            (x_0, x_3, w_1)
+            sage: d.nonbasic_variables()
+            (x_1, x_2, w_0, w_2)
             sage: d.objective_value()
             261.8
 
@@ -529,9 +539,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(
+            sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
+            0
             sage: d = LPBackendDictionary(b)
             sage: d.enter(d.nonbasic_variables()[1])
             sage: d.leave(d.basic_variables()[0])
@@ -571,58 +582,58 @@ class LPBackendDictionary(LPAbstractDictionary):
         if self._backend.warm_up() != 0:
             raise AttributeError("Warm up failed.")
 
-p = MixedIntegerLinearProgram()
-x = p.new_variable(nonnegative=True)
-p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
-p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
-p.add_constraint(5*x[0] + x[2] <= 11)
-p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+#p = MixedIntegerLinearProgram()
+#x = p.new_variable(nonnegative=True)
+#p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
+#p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
+#p.add_constraint(5*x[0] + x[2] <= 11)
+#p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
 
-print
-print
+#print
+#print
 
-print 'Through LPBackendDictionary()'
-b = p.get_backend()
-d = LPBackendDictionary(b)
-print "Solving ......"
-b.solver_parameter(backend.glp_simplex_or_intopt, backend.glp_simplex_only)
-b.solve()
-print 'basic vars:', d.basic_variables()
-print 'nonbasic vars:', d.nonbasic_variables()
-print 'constant terms:', d.constant_terms()
-print 'obj coefs:', d.objective_coefficients()
-print 'obj values:', d.objective_value()
-print 'backend:', d.get_backend()
+#print 'Through LPBackendDictionary()'
+#b = p.get_backend()
+#d = LPBackendDictionary(b)
+#print "Solving ......"
+#b.solver_parameter(\\backend.glp_simplex_or_intopt, backend.glp_simplex_only)
+#b.solve()
+#print 'basic vars:', d.basic_variables()
+#print 'nonbasic vars:', d.nonbasic_variables()
+#print 'constant terms:', d.constant_terms()
+#print 'obj coefs:', d.objective_coefficients()
+#print 'obj values:', d.objective_value()
+#print 'backend:', d.get_backend()
 
-print
-print
+#print
+#print
 
-print 'Through interactive_linear_program()'
-lp, basis = p.interactive_linear_program()
-lpd = lp.dictionary(*basis)
-print 'basic vars:', lpd.basic_variables()
-print 'nonbasic vars:', lpd.nonbasic_variables()
-print 'constant terms:', lpd.constant_terms()
-print 'obj coefs:', lpd.objective_coefficients()
-print 'obj values:', lpd.objective_value()
+#print 'Through interactive_linear_program()'
+#lp, basis = p.interactive_linear_program()
+#lpd = lp.dictionary(*basis)
+#print 'basic vars:', lpd.basic_variables()
+#print 'nonbasic vars:', lpd.nonbasic_variables()
+#print 'constant terms:', lpd.constant_terms()
+#print 'obj coefs:', lpd.objective_coefficients()
+#print 'obj values:', lpd.objective_value()
 
-print
-print
-print
+#print
+#print
+#print
 
-d.objective_value()
-for i in range(d.nonbasic_variables().degree()):
-    for j in range(d.basic_variables().degree()):
-        print
-        print
-        print d.nonbasic_variables()[i]
-        print d.basic_variables()[j]
-        s = raw_input("Continue?")
-        if s == "n":
-            break
-        d.enter(d.nonbasic_variables()[i])
-        d.leave(d.basic_variables()[j])
-        print d.update()
-        print "Obj value:", d.objective_value()
-    if s == "n":
-        break
+#d.objective_value()
+#for i in range(d.nonbasic_variables().degree()):
+#    for j in range(d.basic_variables().degree()):
+#        print
+#        print
+#        print d.nonbasic_variables()[i]
+#        print d.basic_variables()[j]
+#        s = raw_input("Continue?")
+#        if s == "n":
+#            break
+#        d.enter(d.nonbasic_variables()[i])
+#        d.leave(d.basic_variables()[j])
+#        print d.update()
+#        print "Obj value:", d.objective_value()
+#    if s == "n":
+#        break

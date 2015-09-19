@@ -1092,9 +1092,9 @@ cdef class GLPKBackend(GenericBackend):
         else:
           return glp_get_col_prim(self.lp, variable+1)
 
-    cpdef get_row_prim(self, int variable):
+    cpdef get_row_prim(self, int i):
         r"""
-        Returns the value of a constraint given by the solver.
+        Returns the value of the auxiliary variable associated with i-th row.
 
         .. NOTE::
 
@@ -1123,7 +1123,7 @@ cdef class GLPKBackend(GenericBackend):
             sage: lp.get_row_prim(2)
             8.0
         """
-        return glp_get_row_prim(self.lp, variable+1)
+        return glp_get_row_prim(self.lp, i+1)
 
     cpdef int ncols(self):
         """

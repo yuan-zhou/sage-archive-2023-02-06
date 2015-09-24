@@ -1,3 +1,4 @@
+# TODO: avoid high level function calls
 import sage.numerical.backends.coin_backend as backend
 from sage.numerical.interactive_simplex_method import *
 from sage.numerical.backends.coin_backend import *
@@ -21,7 +22,7 @@ class LPBackendDictionary(LPAbstractDictionary):
     One needs an instance of :class:`MixedIntegerLinearProgram` to initialize
     this class::
 
-        sage: p = MixedIntegerLinearProgram(maximization=True,
+        sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
         sage: x = p.new_variable(nonnegative=True)
         sage: p.add_constraint(-x[0] + x[1] <= 2)
@@ -38,7 +39,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         TESTS::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True,
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
@@ -51,7 +52,7 @@ class LPBackendDictionary(LPAbstractDictionary):
         An exception will be raised if the problem is not in standard form
         i.e. with <= constraints and >= 0 variable bounds::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True,
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(8 * x[0] + 2 * x[1], min=17)
@@ -113,7 +114,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Setting up the problem::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True,
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
@@ -145,11 +146,9 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         - a vector
 
-        EXAMPLES:
+        EXAMPLES::
 
-        Setting up the problem::
-
-            sage: p = MixedIntegerLinearProgram(maximization=True,
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
@@ -158,21 +157,8 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: b = p.get_backend()
             sage: b.solve()
             0
-
-        Use function in :class:`LPBackendDictionary`:
-
             sage: d = LPBackendDictionary(b)
-
-        Use function in :class:`InteractiveLPProblem`:
-
-            sage: lp, basis = p.interactive_linear_program()
-            sage: lpd = lp.dictionary(*basis)
-
-        Compare results:
-
             sage: d.basic_variables()
-            (x_0, x_1)
-            sage: lpd.basic_variables()
             (x_0, x_1)
         """
         col_stat, row_stat = self._backend.get_basis_status()
@@ -198,7 +184,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True,
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
@@ -250,10 +236,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             (x_0, x_1, w_0, w_2)
             sage: d.enter(vars[0])
             sage: d.entering_coefficients()
-            (5.0, 36.0, 26.0)
+            (36.0, 26.0, 5.0)
             sage: d.enter(vars[1])
             sage: d.entering_coefficients()
-            (0.0, 1.0, 2.0)
+            (1.0, 2.0, 0.0)
         """
         if self._entering is None:
             raise ValueError("entering variable must be chosen to compute "
@@ -261,30 +247,31 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         index = tuple(self._x).index(self._entering)
 
+        return vector(self._backend.get_binva_col(index))
         # Reverse signs for auxiliary variables
-        if index < self._backend.ncols():
-            tab_col = map(lambda (i, v):
-                          (i, v) if i < self._backend.nrows() else (i, -v),
-                          zip(*self._backend.eval_tab_col(
-                           index + self._backend.nrows())))
-        else:
-            tab_col = map(lambda (i, v):
-                          (i, v) if i < self._backend.nrows() else (i, -v),
-                          zip(*self._backend.eval_tab_col(
-                           index - self._backend.ncols())))
+        #if index < self._backend.ncols():
+        #    tab_col = map(lambda (i, v):
+        #                  (i, v) if i < self._backend.nrows() else (i, -v),
+        #                  zip(*self._backend.eval_tab_col(
+        #                   index + self._backend.nrows())))
+        #else:
+        #    tab_col = map(lambda (i, v):
+        #                  (i, v) if i < self._backend.nrows() else (i, -v),
+        #                  zip(*self._backend.eval_tab_col(
+        #                   index - self._backend.ncols())))
 
-        # Sort the coefficients so coefficients of
-        # problem variables comes first
-        l = [0] * (self._backend.nrows())
-        for (i, v) in tab_col:
-            if i < self._backend.nrows():
-                symbol = self._x[i + self._backend.ncols()]
-            else:
-                symbol = self._x[i - self._backend.nrows()]
-            pos = tuple(self.basic_variables()).index(symbol)
-            l[pos] = v
+        ## Sort the coefficients so coefficients of
+        ## problem variables comes first
+        #l = [0] * (self._backend.nrows())
+        #for (i, v) in tab_col:
+        #    if i < self._backend.nrows():
+        #        symbol = self._x[i + self._backend.ncols()]
+        #    else:
+        #        symbol = self._x[i - self._backend.nrows()]
+        #    pos = tuple(self.basic_variables()).index(symbol)
+        #    l[pos] = v
 
-        return vector(l)
+        #return vector(l)
 
     def leaving_coefficients(self):
         r"""
@@ -303,8 +290,6 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(\
-                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
             sage: d = LPBackendDictionary(b)
@@ -313,33 +298,38 @@ class LPBackendDictionary(LPAbstractDictionary):
             (x_2, x_3, w_1)
             sage: d.leave(vars[0])
             sage: d.leaving_coefficients()
-            (5.0, 0.0, 0.0, 1.0)
+            (5.0, 0.0, 1.0, 0.0)
             sage: d.leave(vars[1])
             sage: d.leaving_coefficients()
-            (36.0, 1.0, 1.0, 7.0)
+            (36.0, 1.0, 0.0, 1.0)
         """
+        # NOTE: possible solution: check all rows, and the ith element
+        # in variable i row should be 1 at the right row, and zero otherwise
         if self._leaving is None:
             raise ValueError("leaving variable must be chosen to compute "
                              "its coefficients")
 
-        index = tuple(self._x).index(self._leaving)
+        var_index = tuple(self._x).index(self._leaving)
+        row_indices = self._backend.get_basics()
+        row_index = tuple(row_indices).index(var_index)
 
-        # Reverse signs for auxiliary variables
-        tab_row = map(lambda (i, v):
-                      (i, v) if i < self._backend.nrows() else (i, -v),
-                      zip(*self._backend.eval_tab_row(
-                       index + self._backend.nrows())))
+        return vector(*self._backend.get_binva_row(row_index))
+        ## Reverse signs for auxiliary variables
+        #tab_row = map(lambda (i, v):
+        #              (i, v) if i < self._backend.nrows() else (i, -v),
+        #              zip(*self._backend.eval_tab_row(
+        #               index + self._backend.nrows())))
 
-        l = [0] * (self._backend.ncols())
-        for (i, v) in tab_row:
-            if i < self._backend.nrows():
-                symbol = self._x[i + self._backend.ncols()]
-            else:
-                symbol = self._x[i - self._backend.nrows()]
-            pos = tuple(self.nonbasic_variables()).index(symbol)
-            l[pos] = v
+        #l = [0] * (self._backend.ncols())
+        #for (i, v) in tab_row:
+        #    if i < self._backend.nrows():
+        #        symbol = self._x[i + self._backend.ncols()]
+        #    else:
+        #        symbol = self._x[i - self._backend.nrows()]
+        #    pos = tuple(self.nonbasic_variables()).index(symbol)
+        #    l[pos] = v
 
-        return vector(l)
+        #return vector(l)
 
     def nonbasic_variables(self):
         r"""
@@ -349,47 +339,31 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         - a vector
 
-        EXAMPLES:
+        EXAMPLES::
 
-        Setting up the problem::
-
-            sage: p = MixedIntegerLinearProgram(maximization=True,
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(\
-                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
-
-        Use function in :class:`LPBackendDictionary`:
-
             sage: d = LPBackendDictionary(b)
-
-        Use function in :class:`InteractiveLPProblem`:
-
-            sage: lp, basis = p.interactive_linear_program()
-            sage: lpd = lp.dictionary(*basis)
-
-        Compare results:
-
             sage: d.nonbasic_variables()
             (w_0, w_1)
-            sage: lpd.nonbasic_variables()
-            (w_0, w_1)
         """
+        col_stat, row_stat = self._backend.get_basis_status()
         col_nonbasics = tuple(
             self._x[i]
             for i in range(self._backend.ncols())
-            if self._backend.get_col_stat(i) != glp_bs
+            if col_stat[i] != 1
         )
         row_nonbasics = tuple(
-            self._x[i + self._backend.ncols()]
+            self._x[i+self._backend.ncols()]
             for i in range(self._backend.nrows())
-            if self._backend.get_row_stat(i) != glp_bs
+            if row_stat[i] != 1
         )
         return vector(col_nonbasics + row_nonbasics)
 
@@ -401,47 +375,33 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         - a vector
 
-        EXAMPLES:
+        EXAMPLES::
 
-        Setting up the problem::
-
-            sage: p = MixedIntegerLinearProgram(maximization=True,
-                                                solver="Coin")
+            sage: p = MixedIntegerLinearProgram(solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
-            sage: p.add_constraint(-x[0] + x[1] <= 2)
-            sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
-            sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
+            sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
+            sage: p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
+            sage: p.add_constraint(5*x[0] + x[2] <= 11)
+            sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(\
-                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
-
-        Use function in :class:`LPBackendDictionary`:
-
             sage: d = LPBackendDictionary(b)
-
-        Use function in :class:`InteractiveLPProblem`:
-
-            sage: lp, basis = p.interactive_linear_program()
-            sage: lpd = lp.dictionary(*basis)
-
-        Compare results:
-
             sage: d.objective_coefficients()
-            (-0.58, -0.76)
-            sage: lpd.objective_coefficients() # rel tol 1e-9
-            (-0.5800000000000001, -0.76)
+            (486.0, 10.0, 13.0, 95.0)
         """
+        col_stat, row_stat = self._backend.get_basis_status()
+        cost = self._backend.get_reduced_cost()
+        price = self._backend.get_row_price()
         col_coefs = tuple(
-            self._backend.get_col_dual(i)
+            cost[i]
             for i in range(self._backend.ncols())
-            if self._backend.get_col_stat(i) != glp_bs
+            if col_stat[i] != 1
         )
         row_coefs = tuple(
-            -self._backend.get_row_dual(i)
+            -price[i]
             for i in range(self._backend.nrows())
-            if self._backend.get_row_stat(i) != glp_bs
+            if row_stat[i] != 1
         )
         return vector(col_coefs + row_coefs)
 
@@ -455,7 +415,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True,
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
@@ -480,15 +440,13 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True,
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
                                                 solver="Coin")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(\
-                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
             sage: d = LPBackendDictionary(b)
@@ -510,8 +468,6 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(\
-                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
             sage: d = LPBackendDictionary(b)
@@ -544,13 +500,13 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
-            sage: b.solver_parameter(\
-                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
             sage: d = LPBackendDictionary(b)
-            sage: d.enter(d.nonbasic_variables()[1])
             sage: d.leave(d.basic_variables()[0])
+            sage: d.leaving_coefficients()
+            (5.0, 0.0, 1.0, 0.0)
+            sage: d.enter(d.nonbasic_variables()[1])
             sage: d.update()
             Traceback (most recent call last):
             ...
@@ -564,53 +520,91 @@ class LPBackendDictionary(LPAbstractDictionary):
         if leaving is None:
             raise ValueError("leaving variable must be set before updating")
 
-        matching_index = tuple(self.basic_variables()).index(leaving)
-        coef = self.entering_coefficients()[matching_index]
+        # ASK: avoid nonbasic_variables() here?
+        matching_index = tuple(self.nonbasic_variables()).index(entering)
+        coef = self.leaving_coefficients()[matching_index]
         if coef == 0:
             raise ValueError("incompatible choice of entering and leaving "
                              "variables")
 
+        col_stat, row_stat = self._backend.get_basis_status()
         entering_index = tuple(self._x).index(entering)
-        if entering_index < self._backend.ncols():
-            self._backend.set_col_stat(entering_index, glp_bs)
-        else:
-            self._backend.set_row_stat(entering_index-self._backend.ncols(),
-                                       glp_bs)
-
         leaving_index = tuple(self._x).index(leaving)
-        if leaving_index < self._backend.ncols():
-            self._backend.set_col_stat(leaving_index, glp_nl)
+
+        if entering_index < self._backend.ncols():
+            col_stat[entering_index] = 1
         else:
-            self._backend.set_row_stat(leaving_index-self._backend.ncols(),
-                                       glp_nu)
+            row_stat[entering_index-self._backend.ncols()] = 1
 
-        if self._backend.warm_up() != 0:
-            raise AttributeError("Warm up failed.")
+        if leaving_index < self._backend.ncols():
+            col_stat[leaving_index] = 3
+        else:
+            row_stat[leaving_index-self._backend.ncols()] = 3
 
-p = MixedIntegerLinearProgram(maximization=True, solver="Coin")
-x = p.new_variable(nonnegative=True)
-p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
-p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
-p.add_constraint(5*x[0] + x[2] <= 11)
-p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+        self._backend.set_basis_status(col_stat, row_stat)
 
-print
-print
+    def add_row(self, nonbasic_coef, constant, slack_variable, integer_slack_variable=false):
+        r"""
+        update a dictionary with an additional row based on a given dictionary.
 
-print 'Through LPBackendDictionary()'
-b = p.get_backend()
-d = LPBackendDictionary(b)
-print "Solving ......"
-b.solve()
-print 'basic vars:', d.basic_variables()
-#print 'nonbasic vars:', d.nonbasic_variables()
-#print 'constant terms:', d.constant_terms()
-#print 'obj coefs:', d.objective_coefficients()
-print 'obj values:', d.objective_value()
-print 'backend:', d.get_backend()
+        INPUT:
 
-print
-print
+        - ``nonbasic_coef``-- a list of nonbasic coefficients for the new row
+
+        - ``constant``-- a number of the constant term for the new row
+
+        - ``slack_variable``-- a string of the name for the new slack variable
+
+        - ``integer_slack_variable``-- (default: false) a boolean value
+        indicating if the new slack variable is integer or not.
+
+        OUTPUT:
+
+        - none, but the dictionary will be updated with an added row
+
+        examples::
+
+            sage: a = ([-1, 1], [8, 2])
+            sage: b = (2, 17)
+            sage: c = (55/10, 21/10)
+            sage: p = interactivelpproblemstandardform(a, b, c)
+            sage: d = p.final_dictionary()
+            sage: d.add_row([7, 11], 42, 'c', integer_slack_variable=true)
+            sage: d.row_coefficients("c")
+            (7, 11)
+            sage: d.constant_terms()[2]
+            42
+            sage: d.basic_variables()[2]
+            c
+            sage: d.integer_variables()
+            {c}
+        """
+        coefs = [0] * (self._backend.ncols())
+        
+#p = MixedIntegerLinearProgram(maximization=True,\ solver="Coin")
+#x = p.new_variable(nonnegative=True)
+#p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
+#p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
+#p.add_constraint(5*x[0] + x[2] <= 11)
+#p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+
+#print
+#print
+
+#print 'Through LPBackendDictionary()'
+#b = p.get_backend()
+#d = LPBackendDictionary(b)
+#print "Solving ......"
+#b.solve()
+#print 'basic vars:', d.basic_variables()
+##print 'nonbasic vars:', d.nonbasic_variables()
+##print 'constant terms:', d.constant_terms()
+##print 'obj coefs:', d.objective_coefficients()
+#print 'obj values:', d.objective_value()
+#print 'backend:', d.get_backend()
+
+#print
+#print
 
 #print 'Through interactive_linear_program()'
 #lp, basis = p.interactive_linear_program()

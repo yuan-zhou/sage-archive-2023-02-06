@@ -21,8 +21,8 @@ class LPBackendDictionary(LPAbstractDictionary):
     One needs an instance of :class:`MixedIntegerLinearProgram` to initialize
     this class::
 
-        sage: p = MixedIntegerLinearProgram(maximization=True)
-        sage: x = p.new_variable(integer=True, nonnegative=True)
+        sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+        sage: x = p.new_variable(nonnegative=True)
         sage: p.add_constraint(-x[0] + x[1] <= 2)
         sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
         sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -37,8 +37,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         TESTS::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -49,8 +49,8 @@ class LPBackendDictionary(LPAbstractDictionary):
         An exception will be raised if the problem is not in standard form
         i.e. with <= constraints and >= 0 variable bounds::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(8 * x[0] + 2 * x[1], min=17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
@@ -110,8 +110,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Setting up the problem::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -145,8 +145,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Setting up the problem::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -194,8 +194,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -230,7 +230,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram()
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
             sage: p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
@@ -293,7 +293,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram()
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
             sage: p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
@@ -350,8 +350,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Setting up the problem::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -401,8 +401,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Setting up the problem::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -450,8 +450,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -476,8 +476,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True)
-            sage: x = p.new_variable(integer=True, nonnegative=True)
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
@@ -498,7 +498,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram()
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
             sage: p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
@@ -532,7 +532,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         An error will be raised if the pivot selected is zero::
 
-            sage: p = MixedIntegerLinearProgram()
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
             sage: p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
@@ -582,7 +582,7 @@ class LPBackendDictionary(LPAbstractDictionary):
         if self._backend.warm_up() != 0:
             raise AttributeError("Warm up failed.")
 
-#p = MixedIntegerLinearProgram()
+#p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
 #x = p.new_variable(nonnegative=True)
 #p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
 #p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)

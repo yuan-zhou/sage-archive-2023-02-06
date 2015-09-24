@@ -1567,3 +1567,54 @@ cdef class CoinBackend(GenericBackend):
             return jthcol
         finally:
             sage_free(c_vec)
+
+    cpdef get_basics(self):
+        cdef int m = self.model.solver().getNumRows()
+        cdef int * c_indices = <int *>check_malloc(m * sizeof(int))
+        cdef list indices 
+        self.model.solver().enableSimplexInterface(True)
+        try:
+            sig_on()            # To catch SIGABRT
+            self.model.solver().getBasics(c_indices)
+            sig_off()
+        except RuntimeError:    # corresponds to SIGABRT
+            raise MIPSolverException('CBC : Signal sent, getBasics() fails eairsntiaerksivbeqyafutboueqtoduboariythdb')
+        else:
+            indices = [c_indices[j] for j in range(m)]
+            return indices 
+        finally:
+            sage_free(c_indices)
+
+    cpdef get_row_price(self):
+        cdef int m = self.model.solver().getNumRows()
+        #cdef double * c_price # = <double *>check_malloc(m * sizeof(double))
+        cdef list price
+        self.model.solver().enableSimplexInterface(True)
+        try:
+            sig_on()            # To catch SIGABRT
+            self.model.solver().getRowPrice()
+            sig_off()
+        except RuntimeError:    # corresponds to SIGABRT
+            raise MIPSolverException('CBC : Signal sent, getBasics() fails')
+        else:
+            price = [self.model.solver().getRowPrice()[j] for j in range(m)]
+            return price 
+        #finally:
+        #    sage_free(c_price)
+
+    cpdef get_reduced_cost(self):
+        cdef int n = self.model.solver().getNumCols()
+        #cdef double * c_cost
+        cdef list cost
+        self.model.solver().enableSimplexInterface(True)
+        try:
+            sig_on()            # To catch SIGABRT
+            self.model.solver().getReducedCost()
+            sig_off()
+        except RuntimeError:    # corresponds to SIGABRT
+            raise MIPSolverException('CBC : Signal sent, getBasics() fails')
+        else:
+            cost = [self.model.solver().getReducedCost()[i] for i in range(n)]
+            return cost 
+        #finally:
+            #sage_free(c_price)

@@ -248,30 +248,6 @@ class LPBackendDictionary(LPAbstractDictionary):
         index = tuple(self._x).index(self._entering)
 
         return vector(self._backend.get_binva_col(index))
-        # Reverse signs for auxiliary variables
-        #if index < self._backend.ncols():
-        #    tab_col = map(lambda (i, v):
-        #                  (i, v) if i < self._backend.nrows() else (i, -v),
-        #                  zip(*self._backend.eval_tab_col(
-        #                   index + self._backend.nrows())))
-        #else:
-        #    tab_col = map(lambda (i, v):
-        #                  (i, v) if i < self._backend.nrows() else (i, -v),
-        #                  zip(*self._backend.eval_tab_col(
-        #                   index - self._backend.ncols())))
-
-        ## Sort the coefficients so coefficients of
-        ## problem variables comes first
-        #l = [0] * (self._backend.nrows())
-        #for (i, v) in tab_col:
-        #    if i < self._backend.nrows():
-        #        symbol = self._x[i + self._backend.ncols()]
-        #    else:
-        #        symbol = self._x[i - self._backend.nrows()]
-        #    pos = tuple(self.basic_variables()).index(symbol)
-        #    l[pos] = v
-
-        #return vector(l)
 
     def leaving_coefficients(self):
         r"""
@@ -303,8 +279,6 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: d.leaving_coefficients()
             (36.0, 1.0, 0.0, 1.0)
         """
-        # NOTE: possible solution: check all rows, and the ith element
-        # in variable i row should be 1 at the right row, and zero otherwise
         if self._leaving is None:
             raise ValueError("leaving variable must be chosen to compute "
                              "its coefficients")
@@ -314,22 +288,6 @@ class LPBackendDictionary(LPAbstractDictionary):
         row_index = tuple(row_indices).index(var_index)
 
         return vector(*self._backend.get_binva_row(row_index))
-        ## Reverse signs for auxiliary variables
-        #tab_row = map(lambda (i, v):
-        #              (i, v) if i < self._backend.nrows() else (i, -v),
-        #              zip(*self._backend.eval_tab_row(
-        #               index + self._backend.nrows())))
-
-        #l = [0] * (self._backend.ncols())
-        #for (i, v) in tab_row:
-        #    if i < self._backend.nrows():
-        #        symbol = self._x[i + self._backend.ncols()]
-        #    else:
-        #        symbol = self._x[i - self._backend.nrows()]
-        #    pos = tuple(self.nonbasic_variables()).index(symbol)
-        #    l[pos] = v
-
-        #return vector(l)
 
     def nonbasic_variables(self):
         r"""
@@ -580,7 +538,7 @@ class LPBackendDictionary(LPAbstractDictionary):
             {c}
         """
         coefs = [0] * (self._backend.ncols())
-        
+
 #p = MixedIntegerLinearProgram(maximization=True,\ solver="Coin")
 #x = p.new_variable(nonnegative=True)
 #p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)

@@ -1441,6 +1441,7 @@ cdef class CoinBackend(GenericBackend):
             sage_free(c_rstat)
 
     cpdef get_binva_row(self, int i):
+        # TODO: revise doc string
         """
         Return the i-th row of the tableau and the slacks.
 
@@ -1569,6 +1570,32 @@ cdef class CoinBackend(GenericBackend):
             sage_free(c_vec)
 
     cpdef get_basics(self):
+        r"""
+        Returns indices of basic variables.
+
+        The order of indices match the order of elements in the vectors returned 
+        by get_binva_col() and the order of rows in get_binva_row(). 
+
+        .. NOTE::
+
+            # ASK: reasonable?
+            Has no meaning unless ``solve`` or ``set_basis_status`` 
+            has been called before.
+
+        EXAMPLE::
+
+            sage: from sage.numerical.backends.generic_backend import get_solver
+            sage: p = get_solver(solver = "Coin")                  # optional - cbc
+            sage: p.add_variables(2)                               # optional - cbc
+            1
+            sage: p.add_linear_constraint([(0, 2), (1, -3)], None, 6) # optional - cbc
+            sage: p.add_linear_constraint([(0, 3), (1, 2)], None, 6)  # optional - cbc
+            sage: p.set_objective([1, 1])                          # optional - cbc
+            sage: p.solve()
+            0
+            sage: p.get_basics()
+            [2, 1]
+        """
         cdef int m = self.model.solver().getNumRows()
         cdef int * c_indices = <int *>check_malloc(m * sizeof(int))
         cdef list indices 
@@ -1586,8 +1613,29 @@ cdef class CoinBackend(GenericBackend):
             sage_free(c_indices)
 
     cpdef get_row_price(self):
+        r"""
+        Returns dual variable values.
+
+        .. NOTE::
+
+            Has no meaning unless ``solve`` or ``set_basis_status`` 
+            has been called before.
+
+        EXAMPLE::
+
+            sage: from sage.numerical.backends.generic_backend import get_solver
+            sage: p = get_solver(solver = "Coin")                  # optional - cbc
+            sage: p.add_variables(2)                               # optional - cbc
+            1
+            sage: p.add_linear_constraint([(0, 2), (1, -3)], None, 6) # optional - cbc
+            sage: p.add_linear_constraint([(0, 3), (1, 2)], None, 6)  # optional - cbc
+            sage: p.set_objective([1, 1])                          # optional - cbc
+            sage: p.solve()
+            0
+            sage: p.get_row_price()
+            [0.0, -0.5]
+        """
         cdef int m = self.model.solver().getNumRows()
-        #cdef double * c_price # = <double *>check_malloc(m * sizeof(double))
         cdef list price
         self.model.solver().enableSimplexInterface(True)
         try:
@@ -1599,12 +1647,32 @@ cdef class CoinBackend(GenericBackend):
         else:
             price = [self.model.solver().getRowPrice()[j] for j in range(m)]
             return price 
-        #finally:
-        #    sage_free(c_price)
 
     cpdef get_reduced_cost(self):
+        r"""
+        # ASK: term used correctly? 
+        Returns reduced costs.
+
+        .. NOTE::
+
+            Has no meaning unless ``solve`` or ``set_basis_status`` 
+            has been called before.
+
+        EXAMPLE::
+
+            sage: from sage.numerical.backends.generic_backend import get_solver
+            sage: p = get_solver(solver = "Coin")                  # optional - cbc
+            sage: p.add_variables(2)                               # optional - cbc
+            1
+            sage: p.add_linear_constraint([(0, 2), (1, -3)], None, 6) # optional - cbc
+            sage: p.add_linear_constraint([(0, 3), (1, 2)], None, 6)  # optional - cbc
+            sage: p.set_objective([1, 1])                          # optional - cbc
+            sage: p.solve()
+            0
+            sage: p.get_reduced_cost()
+            [0.5, 0.0]
+        """
         cdef int n = self.model.solver().getNumCols()
-        #cdef double * c_cost
         cdef list cost
         self.model.solver().enableSimplexInterface(True)
         try:
@@ -1614,7 +1682,6 @@ cdef class CoinBackend(GenericBackend):
         except RuntimeError:    # corresponds to SIGABRT
             raise MIPSolverException('CBC : Signal sent, getBasics() fails')
         else:
+            # ASK: called getReducedCost() twice
             cost = [self.model.solver().getReducedCost()[i] for i in range(n)]
             return cost 
-        #finally:
-            #sage_free(c_price)

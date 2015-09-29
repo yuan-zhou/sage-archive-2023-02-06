@@ -87,9 +87,9 @@ class LPBackendDictionary(LPAbstractDictionary):
             format(self._backend.row_name(i), 'w', i)
             for i in range(self._backend.nrows())
         )
-        names = ", ".join(col_vars + row_vars)
+        self._names = ", ".join(col_vars + row_vars)
         self._R = PolynomialRing(self._backend.base_ring(),
-                                 names, order="neglex")
+                                 self._names, order="neglex")
         self._x = vector(self._R, self._R.gens())
 
     def __eq__(self, other):
@@ -581,6 +581,77 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         if self._backend.warm_up() != 0:
             raise AttributeError("Warm up failed.")
+
+    def add_row(self, nonbasic_coef, constant, slack_variable, integer_slack_variable=false):
+        r"""
+        Update a dictionary with an additional row based on a given dictionary.
+
+        INPUT:
+
+        - ``nonbasic_coef``-- a list of nonbasic coefficients for the new row
+
+        - ``constant``-- a number of the constant term for the new row
+
+        - ``slack_variable``-- a string of the name for the new slack variable
+
+        - ``integer_slack_variable``-- (default: false) a boolean value
+        indicating if the new slack variable is integer or not.
+
+        EXAMPLES::
+
+            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+            sage: x = p.new_variable(nonnegative=True)
+            sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
+            sage: p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
+            sage: p.add_constraint(5*x[0] + x[2] <= 11)
+            sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+            sage: b = p.get_backend()
+            sage: b.solver_parameter(\
+                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
+            sage: b.solve()
+            0
+            sage: d = LPBackendDictionary(b)
+            sage: d.basic_variables()
+            (x_2, x_3, w_1)
+            sage: d.nonbasic_variables()
+            (x_0, x_1, w_0, w_2)
+            sage: d.add_row(range(3,7), 2, 'z_0')
+            sage: b.row(3)
+            ([3, 2, 1, 0], [6.0, 5.0, 4.0, 3.0])
+            sage: b.solve()
+            0
+            sage: d.basic_variables()
+            (x_3, w_0, w_1, w_2)
+            sage: d.nonbasic_variables()
+            (x_0, x_1, x_2, z_0)
+
+        Variables have 0 as their coefficient will not show up in the
+        tableau:
+
+            sage: d.add_row(range(-1,3), 2, 'z_1')
+            sage: d.get_backend().row(4)
+            ([3, 2, 0], [2.0, 1.0, -1.0])
+        """
+        if len(nonbasic_coef) != self._backend.ncols():
+            raise ValueError("Length of nonbasic coefficients incompatible")
+
+        coefs = [(i, nonbasic_coef[i]) for i in range(self._backend.ncols())
+                 if nonbasic_coef[i] != 0]
+        self._backend.add_linear_constraint(
+            coefs, None, constant, slack_variable)
+
+        # ASK: where to place this function?
+        def format(name, prefix, index):
+            if name:
+                return name.replace('[', '_').strip(']')
+            else:
+                return prefix + '_' + str(index)
+
+        self._names += ', '
+        self._names += format(self._backend.row_name(self._backend.nrows()-1), 'w', self._backend.nrows()-1)
+        self._R = PolynomialRing(self._backend.base_ring(),
+                                 self._names, order="neglex")
+        self._x = list(self._R.gens())
 
 #p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
 #x = p.new_variable(nonnegative=True)

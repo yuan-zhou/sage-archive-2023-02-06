@@ -1,4 +1,3 @@
-# TODO: avoid high level function calls
 import sage.numerical.backends.coin_backend as backend
 from sage.numerical.interactive_simplex_method import *
 from sage.numerical.backends.coin_backend import *
@@ -91,10 +90,10 @@ class LPBackendDictionary(LPAbstractDictionary):
             format(self._backend.row_name(i), 'w', i)
             for i in range(self._backend.nrows())
         )
-        names = ", ".join(col_vars + row_vars)
+        self._names = ", ".join(col_vars + row_vars)
         self._R = PolynomialRing(self._backend.base_ring(),
-                                 names, order="neglex")
-        self._x = vector(self._R, self._R.gens())
+                                 self._names, order="neglex")
+        self._x = list(self._R.gens())
 
     def __eq__(self, other):
         r"""
@@ -478,7 +477,6 @@ class LPBackendDictionary(LPAbstractDictionary):
         if leaving is None:
             raise ValueError("leaving variable must be set before updating")
 
-        # ASK: avoid nonbasic_variables() here?
         matching_index = tuple(self.nonbasic_variables()).index(entering)
         coef = self.leaving_coefficients()[matching_index]
         if coef == 0:
@@ -503,7 +501,7 @@ class LPBackendDictionary(LPAbstractDictionary):
 
     def add_row(self, nonbasic_coef, constant, slack_variable, integer_slack_variable=false):
         r"""
-        update a dictionary with an additional row based on a given dictionary.
+        Update a dictionary with an additional row based on a given dictionary.
 
         INPUT:
 
@@ -516,35 +514,69 @@ class LPBackendDictionary(LPAbstractDictionary):
         - ``integer_slack_variable``-- (default: false) a boolean value
         indicating if the new slack variable is integer or not.
 
-        OUTPUT:
+        EXAMPLES::
 
-        - none, but the dictionary will be updated with an added row
+            sage: p = MixedIntegerLinearProgram(solver="Coin")
+            sage: x = p.new_variable(nonnegative=True)
+            sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
+            sage: p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
+            sage: p.add_constraint(5*x[0] + x[2] <= 11)
+            sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+            sage: b = p.get_backend()
+            sage: b.solve()
+            0
+            sage: d = LPBackendDictionary(b)
+            sage: d.basic_variables()
+            (x_2, x_3, w_1)
+            sage: d.nonbasic_variables()
+            (x_0, x_1, w_0, w_2)
+            sage: d.add_row(range(3,7), 2, 'z_0')
+            sage: b.row(3)
+            ([0, 1, 2, 3], [3.0, 4.0, 5.0, 6.0])
+            sage: b.solve()
+            0
+            sage: d.basic_variables()
+            (x_3, w_0, w_1, w_2)
+            sage: d.nonbasic_variables()
+            (x_0, x_1, x_2, z_0)
 
-        examples::
+        Variables have 0 as their coefficient will not show up in the
+        tableau:
 
-            sage: a = ([-1, 1], [8, 2])
-            sage: b = (2, 17)
-            sage: c = (55/10, 21/10)
-            sage: p = interactivelpproblemstandardform(a, b, c)
-            sage: d = p.final_dictionary()
-            sage: d.add_row([7, 11], 42, 'c', integer_slack_variable=true)
-            sage: d.row_coefficients("c")
-            (7, 11)
-            sage: d.constant_terms()[2]
-            42
-            sage: d.basic_variables()[2]
-            c
-            sage: d.integer_variables()
-            {c}
+            sage: d.add_row(range(-1,3), 2, 'z_1')
+            sage: d.get_backend().row(4)
+            ([0, 2, 3], [-1.0, 1.0, 2.0])
         """
-        coefs = [0] * (self._backend.ncols())
+        if len(nonbasic_coef) != self._backend.ncols():
+            raise ValueError("Length of nonbasic coefficients incompatible")
 
-#p = MixedIntegerLinearProgram(maximization=True,\ solver="Coin")
-#x = p.new_variable(nonnegative=True)
-#p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
-#p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
-#p.add_constraint(5*x[0] + x[2] <= 11)
-#p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+        coefs = [(i, nonbasic_coef[i]) for i in range(self._backend.ncols())
+                 if nonbasic_coef[i] != 0]
+        self._backend.add_linear_constraint(
+            coefs, None, constant, slack_variable)
+
+        # ASK: where to place this function?
+        def format(name, prefix, index):
+            if name:
+                return name.replace('[', '_').strip(']')
+            else:
+                return prefix + '_' + str(index)
+
+        self._names += ', '
+        self._names += format(self._backend.row_name(self._backend.nrows()-1), 'w', self._backend.nrows()-1)
+        self._R = PolynomialRing(self._backend.base_ring(),
+                                 self._names, order="neglex")
+        self._x = list(self._R.gens())
+
+p = MixedIntegerLinearProgram(solver="Coin")
+x = p.new_variable(nonnegative=True)
+p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
+p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
+p.add_constraint(5*x[0] + x[2] <= 11)
+p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+b = p.get_backend()
+b.solve()
+d = LPBackendDictionary(b)
 
 #print
 #print

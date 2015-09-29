@@ -1441,7 +1441,6 @@ cdef class CoinBackend(GenericBackend):
             sage_free(c_rstat)
 
     cpdef get_binva_row(self, int i):
-        # TODO: revise doc string
         """
         Return the i-th row of the tableau and the slacks.
 
@@ -1578,7 +1577,6 @@ cdef class CoinBackend(GenericBackend):
 
         .. NOTE::
 
-            # ASK: reasonable?
             Has no meaning unless ``solve`` or ``set_basis_status`` 
             has been called before.
 
@@ -1637,20 +1635,20 @@ cdef class CoinBackend(GenericBackend):
         """
         cdef int m = self.model.solver().getNumRows()
         cdef list price
+        cdef const double * c_price
         self.model.solver().enableSimplexInterface(True)
         try:
             sig_on()            # To catch SIGABRT
-            self.model.solver().getRowPrice()
+            c_price = self.model.solver().getRowPrice()
             sig_off()
         except RuntimeError:    # corresponds to SIGABRT
             raise MIPSolverException('CBC : Signal sent, getBasics() fails')
         else:
-            price = [self.model.solver().getRowPrice()[j] for j in range(m)]
+            price = [c_price[j] for j in range(m)]
             return price 
 
     cpdef get_reduced_cost(self):
         r"""
-        # ASK: term used correctly? 
         Returns reduced costs.
 
         .. NOTE::
@@ -1674,14 +1672,14 @@ cdef class CoinBackend(GenericBackend):
         """
         cdef int n = self.model.solver().getNumCols()
         cdef list cost
+        cdef const double * c_cost
         self.model.solver().enableSimplexInterface(True)
         try:
             sig_on()            # To catch SIGABRT
-            self.model.solver().getReducedCost()
+            c_cost = self.model.solver().getReducedCost()
             sig_off()
         except RuntimeError:    # corresponds to SIGABRT
             raise MIPSolverException('CBC : Signal sent, getBasics() fails')
         else:
-            # ASK: called getReducedCost() twice
-            cost = [self.model.solver().getReducedCost()[i] for i in range(n)]
+            cost = [c_cost[i] for i in range(n)]
             return cost 

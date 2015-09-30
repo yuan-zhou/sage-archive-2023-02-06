@@ -656,63 +656,7 @@ class LPBackendDictionary(LPAbstractDictionary):
             raise AttributeError("Warm up failed.")
 
     def _format_(self, name, prefix, index):
-            if name:
-                return name.replace('[', '_').strip(']')
-            else:
-                return prefix + '_' + str(index)
-
-#p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
-#x = p.new_variable(nonnegative=True)
-#p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
-#p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
-#p.add_constraint(5*x[0] + x[2] <= 11)
-#p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
-
-#print
-#print
-
-#print 'Through LPBackendDictionary()'
-#b = p.get_backend()
-#d = LPBackendDictionary(b)
-#print "Solving ......"
-#b.solver_parameter(\\backend.glp_simplex_or_intopt, backend.glp_simplex_only)
-#b.solve()
-#print 'basic vars:', d.basic_variables()
-#print 'nonbasic vars:', d.nonbasic_variables()
-#print 'constant terms:', d.constant_terms()
-#print 'obj coefs:', d.objective_coefficients()
-#print 'obj values:', d.objective_value()
-#print 'backend:', d.get_backend()
-
-#print
-#print
-
-#print 'Through interactive_linear_program()'
-#lp, basis = p.interactive_linear_program()
-#lpd = lp.dictionary(*basis)
-#print 'basic vars:', lpd.basic_variables()
-#print 'nonbasic vars:', lpd.nonbasic_variables()
-#print 'constant terms:', lpd.constant_terms()
-#print 'obj coefs:', lpd.objective_coefficients()
-#print 'obj values:', lpd.objective_value()
-
-#print
-#print
-#print
-
-#d.objective_value()
-#for i in range(d.nonbasic_variables().degree()):
-#    for j in range(d.basic_variables().degree()):
-#        print
-#        print
-#        print d.nonbasic_variables()[i]
-#        print d.basic_variables()[j]
-#        s = raw_input("Continue?")
-#        if s == "n":
-#            break
-#        d.enter(d.nonbasic_variables()[i])
-#        d.leave(d.basic_variables()[j])
-#        print d.update()
-#        print "Obj value:", d.objective_value()
-#    if s == "n":
-#        break
+        if name:
+            return name.replace('[', '_').strip(']')
+        else:
+            return prefix + '_' + str(index)

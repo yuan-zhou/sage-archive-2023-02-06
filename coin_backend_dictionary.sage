@@ -569,13 +569,3 @@ class LPBackendDictionary(LPAbstractDictionary):
             return name.replace('[', '_').strip(']')
         else:
             return prefix + '_' + str(index)
-
-p = MixedIntegerLinearProgram(solver="Coin")
-x = p.new_variable(nonnegative=True)
-p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
-p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
-p.add_constraint(5*x[0] + x[2] <= 11)
-p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
-b = p.get_backend()
-b.solve()
-d = LPBackendDictionary(b)

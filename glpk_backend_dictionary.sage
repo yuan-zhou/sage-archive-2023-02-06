@@ -59,12 +59,6 @@ class LPBackendDictionary(LPAbstractDictionary):
             ...
             AttributeError: Problem constraints not in standard form.
         """
-        def format(name, prefix, index):
-            if name:
-                return name.replace('[', '_').strip(']')
-            else:
-                return prefix + '_' + str(index)
-
         super(LPBackendDictionary, self).__init__()
         self._backend = backend
 
@@ -80,11 +74,11 @@ class LPBackendDictionary(LPAbstractDictionary):
                                      "not in standard form.")
 
         col_vars = tuple(
-            format(self._backend.col_name(i), 'x', i)
+            self._format_(self._backend.col_name(i), 'x', i)
             for i in range(self._backend.ncols())
         )
         row_vars = tuple(
-            format(self._backend.row_name(i), 'w', i)
+            self._format_(self._backend.row_name(i), 'w', i)
             for i in range(self._backend.nrows())
         )
         self._names = ", ".join(col_vars + row_vars)
@@ -322,10 +316,16 @@ class LPBackendDictionary(LPAbstractDictionary):
         index = tuple(self._x).index(self._leaving)
 
         # Reverse signs for auxiliary variables
-        tab_row = map(lambda (i, v):
-                      (i, v) if i < self._backend.nrows() else (i, -v),
-                      zip(*self._backend.eval_tab_row(
-                       index + self._backend.nrows())))
+        if index < self._backend.ncols():
+            tab_row = map(lambda (i, v):
+                          (i, v) if i < self._backend.nrows() else (i, -v),
+                          zip(*self._backend.eval_tab_row(
+                           index + self._backend.nrows())))
+        else:
+            tab_row = map(lambda (i, v):
+                          (i, v) if i < self._backend.nrows() else (i, -v),
+                          zip(*self._backend.eval_tab_row(
+                           index - self._backend.ncols())))
 
         l = [0] * (self._backend.ncols())
         for (i, v) in tab_row:
@@ -616,8 +616,11 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: d.nonbasic_variables()
             (x_0, x_1, w_0, w_2)
             sage: d.add_row(range(3,7), 2, 'z_0')
-            sage: b.row(3)
-            ([3, 2, 1, 0], [6.0, 5.0, 4.0, 3.0])
+            sage: d.basic_variables()
+            (x_2, x_3, w_1, z_0)
+            sage: d.leave(d.basic_variables()[3])
+            sage: d.leaving_coefficients()
+            (238.0, 2.0, 6.0, 47.0)
             sage: b.solve()
             0
             sage: d.basic_variables()
@@ -640,18 +643,23 @@ class LPBackendDictionary(LPAbstractDictionary):
         self._backend.add_linear_constraint(
             coefs, None, constant, slack_variable)
 
-        # ASK: where to place this function?
-        def format(name, prefix, index):
+        # Update buffered variables
+        self._names += ', '
+        self._names += self._format_(self._backend.row_name(self._backend.nrows()-1), 'w', self._backend.nrows()-1)
+        self._R = PolynomialRing(self._backend.base_ring(),
+                                 self._names, order="neglex")
+        self._x = list(self._R.gens())
+
+        # Update basis status in the backend
+        self._backend.set_row_stat(self._backend.nrows()-1, glp_bs)
+        if self._backend.warm_up() != 0:
+            raise AttributeError("Warm up failed.")
+
+    def _format_(self, name, prefix, index):
             if name:
                 return name.replace('[', '_').strip(']')
             else:
                 return prefix + '_' + str(index)
-
-        self._names += ', '
-        self._names += format(self._backend.row_name(self._backend.nrows()-1), 'w', self._backend.nrows()-1)
-        self._R = PolynomialRing(self._backend.base_ring(),
-                                 self._names, order="neglex")
-        self._x = list(self._R.gens())
 
 #p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
 #x = p.new_variable(nonnegative=True)

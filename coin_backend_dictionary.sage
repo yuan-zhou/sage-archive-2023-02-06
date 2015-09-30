@@ -62,12 +62,6 @@ class LPBackendDictionary(LPAbstractDictionary):
             ...
             AttributeError: Problem constraints not in standard form.
         """
-        def format(name, prefix, index):
-            if name:
-                return name.replace('[', '_').strip(']')
-            else:
-                return prefix + '_' + str(index)
-
         super(LPBackendDictionary, self).__init__()
         self._backend = backend
 
@@ -83,11 +77,11 @@ class LPBackendDictionary(LPAbstractDictionary):
                                      "not in standard form.")
 
         col_vars = tuple(
-            format(self._backend.col_name(i), 'x', i)
+            self._format_(self._backend.col_name(i), 'x', i)
             for i in range(self._backend.ncols())
         )
         row_vars = tuple(
-            format(self._backend.row_name(i), 'w', i)
+            self._format_(self._backend.row_name(i), 'w', i)
             for i in range(self._backend.nrows())
         )
         self._names = ", ".join(col_vars + row_vars)
@@ -531,8 +525,11 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: d.nonbasic_variables()
             (x_0, x_1, w_0, w_2)
             sage: d.add_row(range(3,7), 2, 'z_0')
-            sage: b.row(3)
-            ([0, 1, 2, 3], [3.0, 4.0, 5.0, 6.0])
+            sage: d.basic_variables()
+            (x_2, x_3, w_1, z_0)
+            sage: d.leave(d.basic_variables()[3])
+            sage: d.leaving_coefficients()
+            (-238.0, -2.0, 0.0, 0.0)
             sage: b.solve()
             0
             sage: d.basic_variables()
@@ -555,18 +552,23 @@ class LPBackendDictionary(LPAbstractDictionary):
         self._backend.add_linear_constraint(
             coefs, None, constant, slack_variable)
 
-        # ASK: where to place this function?
-        def format(name, prefix, index):
-            if name:
-                return name.replace('[', '_').strip(']')
-            else:
-                return prefix + '_' + str(index)
-
+        # Update buffered variables
         self._names += ', '
-        self._names += format(self._backend.row_name(self._backend.nrows()-1), 'w', self._backend.nrows()-1)
+        self._names += self._format_(self._backend.row_name(self._backend.nrows()-1), 'w', self._backend.nrows()-1)
         self._R = PolynomialRing(self._backend.base_ring(),
                                  self._names, order="neglex")
         self._x = list(self._R.gens())
+
+        # Update basis status in the backend
+        curr_basis = self._backend.get_basis_status()
+        curr_basis[1].append(1)
+        self._backend.set_basis_status(*curr_basis)
+
+    def _format_(self, name, prefix, index):
+        if name:
+            return name.replace('[', '_').strip(']')
+        else:
+            return prefix + '_' + str(index)
 
 p = MixedIntegerLinearProgram(solver="Coin")
 x = p.new_variable(nonnegative=True)
@@ -577,51 +579,3 @@ p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
 b = p.get_backend()
 b.solve()
 d = LPBackendDictionary(b)
-
-#print
-#print
-
-#print 'Through LPBackendDictionary()'
-#b = p.get_backend()
-#d = LPBackendDictionary(b)
-#print "Solving ......"
-#b.solve()
-#print 'basic vars:', d.basic_variables()
-##print 'nonbasic vars:', d.nonbasic_variables()
-##print 'constant terms:', d.constant_terms()
-##print 'obj coefs:', d.objective_coefficients()
-#print 'obj values:', d.objective_value()
-#print 'backend:', d.get_backend()
-
-#print
-#print
-
-#print 'Through interactive_linear_program()'
-#lp, basis = p.interactive_linear_program()
-#lpd = lp.dictionary(*basis)
-#print 'basic vars:', lpd.basic_variables()
-#print 'nonbasic vars:', lpd.nonbasic_variables()
-#print 'constant terms:', lpd.constant_terms()
-#print 'obj coefs:', lpd.objective_coefficients()
-#print 'obj values:', lpd.objective_value()
-
-#print
-#print
-#print
-
-#d.objective_value()
-#for i in range(d.nonbasic_variables().degree()):
-#    for j in range(d.basic_variables().degree()):
-#        print
-#        print
-#        print d.nonbasic_variables()[i]
-#        print d.basic_variables()[j]
-#        s = raw_input("Continue?")
-#        if s == "n":
-#            break
-#        d.enter(d.nonbasic_variables()[i])
-#        d.leave(d.basic_variables()[j])
-#        print d.update()
-#        print "Obj value:", d.objective_value()
-#    if s == "n":
-#        break

@@ -658,23 +658,23 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
         D._leaving = self._leaving
         return D
 
-from sage.numerical.backends.coin_backend_dictionary \
-      import LPCoinBackendDictionary
-from sage.numerical.mip import MixedIntegerLinearProgram
-p = MixedIntegerLinearProgram(maximization=True,\
-                                    solver="Coin")
-x = p.new_variable(nonnegative=True)
-p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
-p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
-p.add_constraint(5*x[0] + x[2] <= 11)
-p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
-b = p.get_backend()
-b.solve()
-d = LPCoinBackendDictionary(b)
-view(d.dictionary())
-d.add_row(range(3,7), 2, 'z_0')
-view(d.dictionary())
+# from sage.numerical.backends.coin_backend_dictionary \
+#       import LPCoinBackendDictionary
+# from sage.numerical.mip import MixedIntegerLinearProgram
+# p = MixedIntegerLinearProgram(maximization=True,\
+#                                     solver="Coin")
+# x = p.new_variable(nonnegative=True)
+# p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
+# p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
+# p.add_constraint(5*x[0] + x[2] <= 11)
+# p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+# b = p.get_backend()
 # b.solve()
+# d = LPCoinBackendDictionary(b)
+# view(d.dictionary())
+# d.add_row(range(3,7), 2, 'z_0')
+# view(d.dictionary())
+# # b.solve()
 # d.leave(d.basic_variables()[3])
 # print d.leaving_coefficients()
 # from sage.numerical.backends.generic_backend import get_solver

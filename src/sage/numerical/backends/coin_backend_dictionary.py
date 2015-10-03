@@ -69,31 +69,6 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
             AttributeError: Problem constraints not in standard form.
         """
         super(LPCoinBackendDictionary, self).__init__(backend)
-        # self._backend = backend
-
-        # for i in range(self._backend.nrows()):
-        #     if self._backend.row_bounds(i)[0] != None \
-        #        or self._backend.row_bounds(i)[1] == None:
-        #         raise AttributeError("Problem constraints "
-        #                              "not in standard form.")
-
-        # for i in range(self._backend.ncols()):
-        #     if self._backend.variable_lower_bound(i) == None:
-        #         raise AttributeError("Problem variables "
-        #                              "not in standard form.")
-
-        # col_vars = tuple(
-        #     self._format_(self._backend.col_name(i), 'x', i)
-        #     for i in range(self._backend.ncols())
-        # )
-        # row_vars = tuple(
-        #     self._format_(self._backend.row_name(i), 'w', i)
-        #     for i in range(self._backend.nrows())
-        # )
-        # self._names = ", ".join(col_vars + row_vars)
-        # self._R = PolynomialRing(self._backend.base_ring(),
-        #                          self._names, order="neglex")
-        # self._x = list(self._R.gens())
 
     # def __eq__(self, other):
     #     r"""
@@ -285,10 +260,10 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
             (x_2, x_3, w_1)
             sage: d.leave(vars[0])
             sage: d.leaving_coefficients()
-            (5.0, 0.0, 1.0, 0.0)
+            (5.0, 0.0, 0.0, 1.0)
             sage: d.leave(vars[1])
             sage: d.leaving_coefficients()
-            (36.0, 1.0, 0.0, 1.0)
+            (36.0, 1.0, 1.0, 7.0)
         """
         if self._leaving is None:
             raise ValueError("leaving variable must be chosen to compute "
@@ -300,7 +275,7 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
         from sage.misc.flatten import flatten
         row = flatten(self._backend.get_binva_row(row_index))
         nonbasic_indicies = [self._x.index(v) for v in self.nonbasic_variables()]
-        return [row[i] for i in nonbasic_indicies]
+        return vector([row[i] for i in nonbasic_indicies])
 
     def nonbasic_variables(self):
         r"""
@@ -491,7 +466,7 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
             sage: d = LPCoinBackendDictionary(b)
             sage: d.leave(d.basic_variables()[0])
             sage: d.leaving_coefficients()
-            (5.0, 0.0, 1.0, 0.0)
+            (5.0, 0.0, 0.0, 1.0)
             sage: d.enter(d.nonbasic_variables()[1])
             sage: d.update()
             Traceback (most recent call last):
@@ -578,9 +553,9 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
         Variables have 0 as their coefficient will not show up in the
         tableau:
 
-            sage: d.add_row(range(0,4), 5, 'z_1')
+            sage: d.add_row(range(-2, 2), 5, 'z_1')
             sage: d.get_backend().row(4)
-            ([0, 2, 3], [-6.0, 6.0, -1.0])
+            ([0, 1, 2], [-7.0, -1.0, -1.0])
         """
         if len(nonbasic_coef) != self._backend.ncols():
             raise ValueError("Length of nonbasic coefficients incompatible")
@@ -606,9 +581,12 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
 
         # print self._backend.get_reduced_cost(), self._backend.get_row_price()
         # Update buffered variables
+        # TODO: extract small functions here
         self._names += ', '
-        self._names += self._format_(self._backend.row_name(self._backend.nrows()-1),
-                                     'w', self._backend.nrows()-1)
+        self._names += LPCoinBackendDictionary._format_(
+                            name=self._backend.row_name(self._backend.nrows()-1),
+                            symbol='w', index=self._backend.nrows()-1
+                        )
         self._R = PolynomialRing(self._backend.base_ring(),
                                  self._names, order="neglex")
         self._x = tuple(self._R.gens())
@@ -646,6 +624,7 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
             sage: b.solve()
+            0
             sage: d = LPCoinBackendDictionary(b)
             sage: view(d.dictionary()) # not tested
 
@@ -674,12 +653,6 @@ class LPCoinBackendDictionary(LPAbstractBackendDictionary):
         D._entering = self._entering
         D._leaving = self._leaving
         return D
-    # def _format_(self, name, prefix, index):
-    #     if name:
-    #         return name.replace('[', '_').strip(']')
-    #     else:
-    #         return prefix + '_' + str(index)
-
 
 from sage.numerical.backends.coin_backend_dictionary \
       import LPCoinBackendDictionary

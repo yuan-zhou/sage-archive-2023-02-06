@@ -324,10 +324,10 @@ class LPGLPKBackendDictionary(LPAbstractBackendDictionary):
             (x_2, x_3, w_1)
             sage: d.leave(vars[0])
             sage: d.leaving_coefficients()
-            (5.0, 0.0, 0.0, 1.0)
+            (-5.0, 0.0, 0.0, -1.0)
             sage: d.leave(vars[1])
             sage: d.leaving_coefficients()
-            (36.0, 1.0, 1.0, 7.0)
+            (-36.0, -1.0, -1.0, -7.0)
         """
         if self._leaving is None:
             raise ValueError("leaving variable must be chosen to compute "
@@ -672,9 +672,9 @@ class LPGLPKBackendDictionary(LPAbstractBackendDictionary):
         Variables have 0 as their coefficient will not show up in the
         tableau:
 
-            sage: d.add_row(range(0,4), 5, 'z_1')
+            sage: d.add_row(range(-2, 2), 5, 'z_1')
             sage: d.get_backend().row(4)
-            ([3, 2, 0], [-1.0, 6.0, -6.0])
+            ([2, 1, 0], [-1.0, -1.0, -7.0])
         """
         if len(nonbasic_coef) != self._backend.ncols():
             raise ValueError("Length of nonbasic coefficients incompatible")
@@ -700,8 +700,10 @@ class LPGLPKBackendDictionary(LPAbstractBackendDictionary):
 
         # Update buffered variables
         self._names += ', '
-        self._names += self._format_(self._backend.row_name(self._backend.nrows()-1),
-                                     'w', self._backend.nrows()-1)
+        self._names += self._format_(
+                            name=self._backend.row_name(self._backend.nrows()-1),
+                            symbol='w', index=self._backend.nrows()-1
+                        )
         self._R = PolynomialRing(self._backend.base_ring(),
                                  self._names, order="neglex")
         self._x = list(self._R.gens())
@@ -710,9 +712,3 @@ class LPGLPKBackendDictionary(LPAbstractBackendDictionary):
         self._backend.set_row_stat(self._backend.nrows()-1, glp_bs)
         if self._backend.warm_up() != 0:
             raise AttributeError("Warm up failed.")
-
-    # def _format_(self, name, prefix, index):
-    #     if name:
-    #         return name.replace('[', '_').strip(']')
-    #     else:
-    #         return prefix + '_' + str(index)

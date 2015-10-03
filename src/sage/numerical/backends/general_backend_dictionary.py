@@ -30,8 +30,8 @@ class LPAbstractBackendDictionary(LPAbstractDictionary):
         sage: d = LPAbstractBackendDictionary(b)
         sage: d
         LP problem dictionary (use typeset mode to see details)
-        # ASK: name it like "LP Abstract Backend Dictionary"?
     """
+    # ASK: name it like "LP Abstract Backend Dictionary"?
     # TODO: doc strings using itself
     def __init__(self, backend):
         super(LPAbstractBackendDictionary, self).__init__()
@@ -208,6 +208,58 @@ class LPAbstractBackendDictionary(LPAbstractDictionary):
             <sage.numerical.backends.coin_backend.CoinBackend object at ...>
         """
         return self._backend
+
+    def dictionary(self):
+        r"""
+        Return a regular LP dictionary matching ``self``.
+
+        OUTPUT:
+
+        - an :class:`LP dictionary <LPDictionary>`
+
+        EXAMPLES::
+
+            sage: from sage.numerical.backends.coin_backend_dictionary \
+                  import LPCoinBackendDictionary
+            sage: from sage.numerical.mip import MixedIntegerLinearProgram
+            sage: p = MixedIntegerLinearProgram(maximization=True,\
+                                                solver="Coin")
+            sage: x = p.new_variable(nonnegative=True)
+            sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
+            sage: p.add_constraint(x[1] + 2*x[2] - x[3] <= 13)
+            sage: p.add_constraint(5*x[0] + x[2] <= 11)
+            sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
+            sage: b = p.get_backend()
+            sage: b.solve()
+            0
+            sage: d = LPCoinBackendDictionary(b)
+            sage: view(d.dictionary()) # not tested
+
+        # ASK: greek sign fine here?
+        ζ is used as default problem name, and it can be changed:
+
+            sage: b.problem_name("beta")
+            sage: view(d.dictionary()) # not tested
+        """
+        rows = []
+        for i in range(self._backend.nrows()):
+            self._leaving = self.basic_variables()[i]
+            rows.append(self.leaving_coefficients())
+        import sage.matrix.constructor as matrix
+        m = matrix.matrix(rows)
+        name = self._backend.problem_name()
+        if not name:
+            name = 'zeta'
+        D = LPDictionary(m,
+                         self.constant_terms(),
+                         self.objective_coefficients(),
+                         self.objective_value(),
+                         self.basic_variables(),
+                         self.nonbasic_variables(),
+                         name) # ASK: default name of the problem?
+        D._entering = self._entering
+        D._leaving = self._leaving
+        return D
 
 # ASK: general functions in backends?
 # just find common backend functions in coin and glpk?

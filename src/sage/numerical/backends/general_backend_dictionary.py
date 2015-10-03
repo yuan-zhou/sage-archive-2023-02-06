@@ -2,8 +2,9 @@ from sage.numerical.interactive_simplex_method import *
 
 
 class LPAbstractBackendDictionary(LPAbstractDictionary):
+    # TODO: doc strings using itself
     def __init__(self, backend):
-        super(LPBackendDictionary, self).__init__()
+        super(LPAbstractBackendDictionary, self).__init__()
         self._backend = backend
         for i in range(self._backend.nrows()):
             if self._backend.row_bounds(i)[0] != None \
@@ -27,7 +28,7 @@ class LPAbstractBackendDictionary(LPAbstractDictionary):
         self._names = ", ".join(col_vars + row_vars)
         self._R = PolynomialRing(self._backend.base_ring(),
                                  self._names, order="neglex")
-        self._x = list(self._R.gens())
+        self._x = tuple(self._R.gens()) # TODO: make this a tuple by default
 
     def __eq__(self, other):
         return (isinstance(other, LPBackendDictionary) and

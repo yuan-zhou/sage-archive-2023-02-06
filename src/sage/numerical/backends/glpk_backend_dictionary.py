@@ -1,9 +1,9 @@
 import sage.numerical.backends.glpk_backend as backend
-from sage.numerical.interactive_simplex_method import *
+# from sage.numerical.interactive_simplex_method import *
 from sage.numerical.backends.glpk_backend import *
+from sage.numerical.backends.general_backend_dictionary import *
 
-
-class LPBackendDictionary(LPAbstractDictionary):
+class LPGLPKBackendDictionary(LPAbstractBackendDictionary):
     r"""
     Construct a dictionary for an LP problem from an backend.
 
@@ -14,118 +14,126 @@ class LPBackendDictionary(LPAbstractDictionary):
 
     OUTPUT:
 
-       - a :class:`backend dictionary for an LP problem <LPBackendDictionary>`
+       - a :class:`backend dictionary for an LP problem <LPGLPKBackendDictionary>`
 
     EXAMPLES:
 
     One needs an instance of :class:`MixedIntegerLinearProgram` to initialize
     this class::
 
+        sage: from sage.numerical.backends.glpk_backend_dictionary \
+              import LPGLPKBackendDictionary
         sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
         sage: x = p.new_variable(nonnegative=True)
         sage: p.add_constraint(-x[0] + x[1] <= 2)
         sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
         sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
         sage: b = p.get_backend()
-        sage: d = LPBackendDictionary(b)
+        sage: d = LPGLPKBackendDictionary(b)
         sage: d
         LP problem dictionary (use typeset mode to see details)
     """
     def __init__(self, backend):
         r"""
-        See :class:`LPBackendDictionary` for documentation.
+        See :class:`LPGLPKBackendDictionary` for documentation.
 
         TESTS::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
             sage: TestSuite(d).run(skip=['_test_pickling'])
 
         An exception will be raised if the problem is not in standard form
         i.e. with <= constraints and >= 0 variable bounds::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(8 * x[0] + 2 * x[1], min=17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
             Traceback (most recent call last):
             ...
             AttributeError: Problem constraints not in standard form.
         """
-        super(LPBackendDictionary, self).__init__()
-        self._backend = backend
+        super(LPGLPKBackendDictionary, self).__init__(backend)
+        # self._backend = backend
 
-        for i in range(self._backend.nrows()):
-            if self._backend.row_bounds(i)[0] != None \
-               or self._backend.row_bounds(i)[1] == None:
-                raise AttributeError("Problem constraints "
-                                     "not in standard form.")
+        # for i in range(self._backend.nrows()):
+        #     if self._backend.row_bounds(i)[0] != None \
+        #        or self._backend.row_bounds(i)[1] == None:
+        #         raise AttributeError("Problem constraints "
+        #                              "not in standard form.")
 
-        for i in range(self._backend.ncols()):
-            if self._backend.variable_lower_bound(i) == None:
-                raise AttributeError("Problem variables "
-                                     "not in standard form.")
+        # for i in range(self._backend.ncols()):
+        #     if self._backend.variable_lower_bound(i) == None:
+        #         raise AttributeError("Problem variables "
+        #                              "not in standard form.")
 
-        col_vars = tuple(
-            self._format_(self._backend.col_name(i), 'x', i)
-            for i in range(self._backend.ncols())
-        )
-        row_vars = tuple(
-            self._format_(self._backend.row_name(i), 'w', i)
-            for i in range(self._backend.nrows())
-        )
-        self._names = ", ".join(col_vars + row_vars)
-        self._R = PolynomialRing(self._backend.base_ring(),
-                                 self._names, order="neglex")
-        self._x = vector(self._R, self._R.gens())
+        # col_vars = tuple(
+        #     self._format_(self._backend.col_name(i), 'x', i)
+        #     for i in range(self._backend.ncols())
+        # )
+        # row_vars = tuple(
+        #     self._format_(self._backend.row_name(i), 'w', i)
+        #     for i in range(self._backend.nrows())
+        # )
+        # self._names = ", ".join(col_vars + row_vars)
+        # self._R = PolynomialRing(self._backend.base_ring(),
+        #                          self._names, order="neglex")
+        # self._x = vector(self._R, self._R.gens())
 
-    def __eq__(self, other):
-        r"""
-        Check if two LP problem dictionaries have the same
-        reference.
+    # def __eq__(self, other):
+    #     r"""
+    #     Check if two LP problem dictionaries have the same
+    #     reference.
 
-        INPUT:
+    #     INPUT:
 
-        - ``other`` -- anything
+    #     - ``other`` -- anything
 
-        OUTPUT:
+    #     OUTPUT:
 
-        - ``True`` if ``other`` is an :class:`LPDictionary` with all
-          details the same as ``self``, ``False`` otherwise.
+    #     - ``True`` if ``other`` is an :class:`LPDictionary` with all
+    #       details the same as ``self``, ``False`` otherwise.
 
-        TESTS:
+    #     TESTS:
 
-        Setting up the problem::
+    #     Setting up the problem::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
-            sage: x = p.new_variable(nonnegative=True)
-            sage: p.add_constraint(-x[0] + x[1] <= 2)
-            sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
-            sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
-            sage: b = p.get_backend()
-            sage: d = LPBackendDictionary(b)
+    #         sage: from sage.numerical.backends.glpk_backend_dictionary \
+    #               import LPGLPKBackendDictionary
+    #         sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+    #         sage: x = p.new_variable(nonnegative=True)
+    #         sage: p.add_constraint(-x[0] + x[1] <= 2)
+    #         sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
+    #         sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
+    #         sage: b = p.get_backend()
+    #         sage: d = LPGLPKBackendDictionary(b)
 
-        Test when two problems have the same reference:
+    #     Test when two problems have the same reference:
 
-            sage: d2 = d
-            sage: d2 == d
-            True
+    #         sage: d2 = d
+    #         sage: d2 == d
+    #         True
 
-        Test when two problems have the same constrct:
+    #     Test when two problems have the same constrct:
 
-            sage: d3 = LPBackendDictionary(copy(p).get_backend())
-            sage: d3 == d
-            False
-        """
-        return (isinstance(other, LPBackendDictionary) and
-                self._backend == other._backend)
+    #         sage: d3 = LPGLPKBackendDictionary(copy(p).get_backend())
+    #         sage: d3 == d
+    #         False
+    #     """
+    #     return (isinstance(other, LPGLPKBackendDictionary) and
+    #             self._backend == other._backend)
 
     def basic_variables(self):
         r"""
@@ -139,20 +147,23 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Setting up the problem::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
 
-        Use function in :class:`LPBackendDictionary`:
+        Use function in :class:`LPGLPKBackendDictionary`:
 
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
 
         Use function in :class:`InteractiveLPProblem`:
 
@@ -188,17 +199,20 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
             sage: d.constant_terms()
             (1.3, 3.3)
         """
@@ -224,6 +238,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
@@ -231,11 +247,12 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
             sage: vars = d.nonbasic_variables()
             sage: vars
             (x_0, x_1, w_0, w_2)
@@ -287,6 +304,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
@@ -294,11 +313,12 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
             sage: vars = d.basic_variables()
             sage: vars
             (x_2, x_3, w_1)
@@ -318,12 +338,12 @@ class LPBackendDictionary(LPAbstractDictionary):
         # Reverse signs for auxiliary variables
         if index < self._backend.ncols():
             tab_row = map(lambda (i, v):
-                          (i, v) if i < self._backend.nrows() else (i, -v),
+                          (i, -v) if i < self._backend.nrows() else (i, v),
                           zip(*self._backend.eval_tab_row(
                            index + self._backend.nrows())))
         else:
             tab_row = map(lambda (i, v):
-                          (i, v) if i < self._backend.nrows() else (i, -v),
+                          (i, -v) if i < self._backend.nrows() else (i, v),
                           zip(*self._backend.eval_tab_row(
                            index - self._backend.ncols())))
 
@@ -350,20 +370,23 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Setting up the problem::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
 
-        Use function in :class:`LPBackendDictionary`:
+        Use function in :class:`LPGLPKBackendDictionary`:
 
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
 
         Use function in :class:`InteractiveLPProblem`:
 
@@ -401,20 +424,23 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         Setting up the problem::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(-x[0] + x[1] <= 2)
             sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
             sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
 
-        Use function in :class:`LPBackendDictionary`:
+        Use function in :class:`LPGLPKBackendDictionary`:
 
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
 
         Use function in :class:`InteractiveLPProblem`:
 
@@ -440,57 +466,63 @@ class LPBackendDictionary(LPAbstractDictionary):
         )
         return vector(col_coefs + row_coefs)
 
-    def objective_value(self):
-        r"""
-        Return the value of the objective value.
+    # def objective_value(self):
+    #     r"""
+    #     Return the value of the objective value.
 
-        OUTPUT:
+    #     OUTPUT:
 
-        - a number
+    #     - a number
 
-        EXAMPLES::
+    #     EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
-            sage: x = p.new_variable(nonnegative=True)
-            sage: p.add_constraint(-x[0] + x[1] <= 2)
-            sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
-            sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
-            sage: b = p.get_backend()
-            sage: b.solver_parameter(\
-                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
-            sage: b.solve()
-            0
-            sage: d = LPBackendDictionary(b)
-            sage: d.objective_value()
-            14.08
-        """
-        return self._backend.get_objective_value()
+    #         sage: from sage.numerical.backends.glpk_backend_dictionary \
+    #               import LPGLPKBackendDictionary
+    #         sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+    #         sage: x = p.new_variable(nonnegative=True)
+    #         sage: p.add_constraint(-x[0] + x[1] <= 2)
+    #         sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
+    #         sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
+    #         sage: b = p.get_backend()
+    #         sage: import sage.numerical.backends.glpk_backend as backend
+    #         sage: b.solver_parameter(\
+    #             backend.glp_simplex_or_intopt, backend.glp_simplex_only)
+    #         sage: b.solve()
+    #         0
+    #         sage: d = LPGLPKBackendDictionary(b)
+    #         sage: d.objective_value()
+    #         14.08
+    #     """
+    #     return self._backend.get_objective_value()
 
-    def get_backend(self):
-        r"""
-        Return the backend used to create the dictionary.
+    # def get_backend(self):
+    #     r"""
+    #     Return the backend used to create the dictionary.
 
-        OUTPUT:
+    #     OUTPUT:
 
-        - The corresponding dictionary
+    #     - The corresponding dictionary
 
-        EXAMPLES::
+    #     EXAMPLES::
 
-            sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
-            sage: x = p.new_variable(nonnegative=True)
-            sage: p.add_constraint(-x[0] + x[1] <= 2)
-            sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
-            sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
-            sage: b = p.get_backend()
-            sage: b.solver_parameter(\
-                backend.glp_simplex_or_intopt, backend.glp_simplex_only)
-            sage: b.solve()
-            0
-            sage: d = LPBackendDictionary(b)
-            sage: d.get_backend()
-            <sage.numerical.backends.glpk_backend.GLPKBackend object at ...>
-        """
-        return self._backend
+    #         sage: from sage.numerical.backends.glpk_backend_dictionary \
+    #               import LPGLPKBackendDictionary
+    #         sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
+    #         sage: x = p.new_variable(nonnegative=True)
+    #         sage: p.add_constraint(-x[0] + x[1] <= 2)
+    #         sage: p.add_constraint(8 * x[0] + 2 * x[1] <= 17)
+    #         sage: p.set_objective(5.5 * x[0] + 2.1 * x[1])
+    #         sage: b = p.get_backend()
+    #         sage: import sage.numerical.backends.glpk_backend as backend
+    #         sage: b.solver_parameter(\
+    #             backend.glp_simplex_or_intopt, backend.glp_simplex_only)
+    #         sage: b.solve()
+    #         0
+    #         sage: d = LPGLPKBackendDictionary(b)
+    #         sage: d.get_backend()
+    #         <sage.numerical.backends.glpk_backend.GLPKBackend object at ...>
+    #     """
+    #     return self._backend
 
     def update(self):
         r"""
@@ -498,6 +530,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
@@ -505,11 +539,12 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
             sage: d.objective_value()
             1331.0
             sage: d.nonbasic_variables()
@@ -532,6 +567,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         An error will be raised if the pivot selected is zero::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
@@ -539,11 +576,12 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
             sage: d.enter(d.nonbasic_variables()[1])
             sage: d.leave(d.basic_variables()[0])
             sage: d.update()
@@ -599,6 +637,8 @@ class LPBackendDictionary(LPAbstractDictionary):
 
         EXAMPLES::
 
+            sage: from sage.numerical.backends.glpk_backend_dictionary \
+                  import LPGLPKBackendDictionary
             sage: p = MixedIntegerLinearProgram(maximization=True, solver="GLPK")
             sage: x = p.new_variable(nonnegative=True)
             sage: p.add_constraint(x[0] + x[1] - 7*x[2] + x[3] <= 22)
@@ -606,11 +646,12 @@ class LPBackendDictionary(LPAbstractDictionary):
             sage: p.add_constraint(5*x[0] + x[2] <= 11)
             sage: p.set_objective(2*x[0] + 3*x[1] + 4*x[2] + 13*x[3])
             sage: b = p.get_backend()
+            sage: import sage.numerical.backends.glpk_backend as backend
             sage: b.solver_parameter(\
                 backend.glp_simplex_or_intopt, backend.glp_simplex_only)
             sage: b.solve()
             0
-            sage: d = LPBackendDictionary(b)
+            sage: d = LPGLPKBackendDictionary(b)
             sage: d.basic_variables()
             (x_2, x_3, w_1)
             sage: d.nonbasic_variables()
@@ -620,32 +661,47 @@ class LPBackendDictionary(LPAbstractDictionary):
             (x_2, x_3, w_1, z_0)
             sage: d.leave(d.basic_variables()[3])
             sage: d.leaving_coefficients()
-            (238.0, 2.0, 6.0, 47.0)
+            (3.0, 4.0, 5.0, 6.0)
             sage: b.solve()
             0
             sage: d.basic_variables()
-            (x_3, w_0, w_1, w_2)
+            (x_2, x_3, w_1, z_0)
             sage: d.nonbasic_variables()
-            (x_0, x_1, x_2, z_0)
+            (x_0, x_1, w_0, w_2)
 
         Variables have 0 as their coefficient will not show up in the
         tableau:
 
-            sage: d.add_row(range(-1,3), 2, 'z_1')
+            sage: d.add_row(range(0,4), 5, 'z_1')
             sage: d.get_backend().row(4)
-            ([3, 2, 0], [2.0, 1.0, -1.0])
+            ([3, 2, 0], [-1.0, 6.0, -6.0])
         """
         if len(nonbasic_coef) != self._backend.ncols():
             raise ValueError("Length of nonbasic coefficients incompatible")
 
-        coefs = [(i, nonbasic_coef[i]) for i in range(self._backend.ncols())
-                 if nonbasic_coef[i] != 0]
+        # Convert to problem variable coefficients
+        coefs = [0] * self._backend.ncols()
+        for i, var in enumerate(self.nonbasic_variables()):
+            index = tuple(self._x).index(var)
+            if index < self._backend.ncols():
+                coefs[index] += nonbasic_coef[i]
+            else:
+                row_pos = index-self._backend.ncols()
+                row = self._backend.row(row_pos)
+                for j, v in zip(*row):
+                    coefs[j] -= nonbasic_coef[i] * v
+                upper_bound = self._backend.row_bounds(row_pos)[1]
+                constant -= nonbasic_coef[i] * upper_bound
+
+        coef_pairs = [(i, coefs[i]) for i in range(self._backend.ncols())
+                                    if coefs[i] != 0]        
         self._backend.add_linear_constraint(
-            coefs, None, constant, slack_variable)
+            coef_pairs, None, constant, slack_variable)
 
         # Update buffered variables
         self._names += ', '
-        self._names += self._format_(self._backend.row_name(self._backend.nrows()-1), 'w', self._backend.nrows()-1)
+        self._names += self._format_(self._backend.row_name(self._backend.nrows()-1),
+                                     'w', self._backend.nrows()-1)
         self._R = PolynomialRing(self._backend.base_ring(),
                                  self._names, order="neglex")
         self._x = list(self._R.gens())
@@ -655,8 +711,8 @@ class LPBackendDictionary(LPAbstractDictionary):
         if self._backend.warm_up() != 0:
             raise AttributeError("Warm up failed.")
 
-    def _format_(self, name, prefix, index):
-        if name:
-            return name.replace('[', '_').strip(']')
-        else:
-            return prefix + '_' + str(index)
+    # def _format_(self, name, prefix, index):
+    #     if name:
+    #         return name.replace('[', '_').strip(']')
+    #     else:
+    #         return prefix + '_' + str(index)
